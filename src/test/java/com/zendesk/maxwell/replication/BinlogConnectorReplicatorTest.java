@@ -97,7 +97,7 @@ public class BinlogConnectorReplicatorTest extends TestWithNameLogging {
 			false,
 			"maxwell-client",
 			new HeartbeatNotifier(),
-			null,
+			// null,
 			context.getFilter(),
 			new MaxwellOutputConfig(),
 			context.getConfig().bufferMemoryUsage
