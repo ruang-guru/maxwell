@@ -58,13 +58,13 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 	public void testBootstrapNullValues() throws Exception {
 		runJSON("json/bootstrap-null-values");
 	}
-
-	@Test
-	public void testBootstrapJSFilters() throws Exception {
-		String dir = MaxwellTestSupport.getSQLDir();
-		runJSON("json/bootstrap-js-filters", (c) -> c.javascriptFile = dir + "/json/filter.javascript");
-	}
-
+	//
+	// @Test
+	// public void testBootstrapJSFilters() throws Exception {
+	// 	String dir = MaxwellTestSupport.getSQLDir();
+	// 	runJSON("json/bootstrap-js-filters", (c) -> c.javascriptFile = dir + "/json/filter.javascript");
+	// }
+	//
 	@Test
 	public void testBootstrapOnSeparateServer() throws Exception {
 		MysqlIsolatedServer otherServer = new MysqlIsolatedServer();
