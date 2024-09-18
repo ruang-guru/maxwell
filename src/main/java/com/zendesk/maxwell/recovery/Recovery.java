@@ -71,7 +71,7 @@ public class Recovery {
 					true,
 					recoveryInfo.clientID,
 					new HeartbeatNotifier(),
-					null,
+					// null,
 					new RecoveryFilter(this.maxwellDatabaseName),
 					new MaxwellOutputConfig(),
 					0.25f // Default memory usage size, not used 
