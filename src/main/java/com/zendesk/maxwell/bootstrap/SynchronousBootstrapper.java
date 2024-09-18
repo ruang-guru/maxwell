@@ -12,7 +12,7 @@ import com.zendesk.maxwell.schema.SchemaCapturer;
 import com.zendesk.maxwell.schema.Table;
 import com.zendesk.maxwell.schema.columndef.ColumnDef;
 import com.zendesk.maxwell.schema.columndef.TimeColumnDef;
-import com.zendesk.maxwell.scripting.Scripting;
+// import com.zendesk.maxwell.scripting.Scripting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,10 +69,10 @@ public class SynchronousBootstrapper {
 				setRowValues(row, resultSet, table);
 				row.setSchemaId(currentSchemaID);
 
-				Scripting scripting = context.getConfig().scripting;
-				if ( scripting != null )
-					scripting.invoke(row);
-
+				// Scripting scripting = context.getConfig().scripting;
+				// if ( scripting != null )
+				// 	scripting.invoke(row);
+				//
 				if ( LOGGER.isDebugEnabled() )
 					LOGGER.debug("bootstrapping row : " + row.toJSON());
 

@@ -25,7 +25,7 @@ import com.zendesk.maxwell.schema.SchemaStoreException;
 import com.zendesk.maxwell.schema.Table;
 import com.zendesk.maxwell.schema.ddl.DDLMap;
 import com.zendesk.maxwell.schema.ddl.ResolvedSchemaChange;
-import com.zendesk.maxwell.scripting.Scripting;
+// import com.zendesk.maxwell.scripting.Scripting;
 import com.zendesk.maxwell.util.RunLoopProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class BinlogConnectorReplicator extends RunLoopProcess implements Replica
 	private BinlogConnectorLifecycleListener binlogLifecycleListener;
 	private final LinkedBlockingDeque<BinlogConnectorEvent> queue = new LinkedBlockingDeque<>(20);
 	private final TableCache tableCache;
-	private final Scripting scripting;
+	// private final Scripting scripting;
 	private ServerException lastCommError;
 
 	private final boolean stopOnEOF;
@@ -93,7 +93,7 @@ public class BinlogConnectorReplicator extends RunLoopProcess implements Replica
 		boolean stopOnEOF,
 		String clientID,
 		HeartbeatNotifier heartbeatNotifier,
-		Scripting scripting,
+		// Scripting scripting,
 		Filter filter,
 		MaxwellOutputConfig outputConfig,
 		float bufferMemoryUsage
@@ -105,7 +105,7 @@ public class BinlogConnectorReplicator extends RunLoopProcess implements Replica
 		this.lastHeartbeatPosition = start;
 		this.heartbeatNotifier = heartbeatNotifier;
 		this.stopOnEOF = stopOnEOF;
-		this.scripting = scripting;
+		// this.scripting = scripting;
 		this.schemaStore = schemaStore;
 		this.tableCache = new TableCache(maxwellSchemaDatabaseName);
 		this.filter = filter;
@@ -187,9 +187,9 @@ public class BinlogConnectorReplicator extends RunLoopProcess implements Replica
 		rowCounter.inc();
 		rowMeter.mark();
 
-		if ( scripting != null && !isMaxwellRow(row))
-			scripting.invoke(row);
-
+		// if ( scripting != null && !isMaxwellRow(row))
+		// 	scripting.invoke(row);
+		//
 		processRow(row);
 	}
 
@@ -323,9 +323,9 @@ public class BinlogConnectorReplicator extends RunLoopProcess implements Replica
 			if (change.shouldOutput(filter)) {
 				DDLMap ddl = new DDLMap(change, timestamp, sql, position, nextPosition, schemaId);
 
-				if ( scripting != null )
-					scripting.invoke(ddl);
-
+				// if ( scripting != null )
+				// 	scripting.invoke(ddl);
+				//
 				producer.push(ddl);
 			}
 		}

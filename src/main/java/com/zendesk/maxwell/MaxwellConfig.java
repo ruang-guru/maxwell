@@ -11,7 +11,7 @@ import com.zendesk.maxwell.producer.MaxwellOutputConfig;
 import com.zendesk.maxwell.producer.ProducerFactory;
 import com.zendesk.maxwell.replication.BinlogPosition;
 import com.zendesk.maxwell.replication.Position;
-import com.zendesk.maxwell.scripting.Scripting;
+// import com.zendesk.maxwell.scripting.Scripting;
 import com.zendesk.maxwell.util.AbstractConfig;
 import com.zendesk.maxwell.util.MaxwellOptionParser;
 import joptsimple.BuiltinHelpFormatter;
@@ -142,7 +142,7 @@ public class MaxwellConfig extends AbstractConfig {
 	public String redisStreamJsonKey;
 	public String redisType;
 	public String javascriptFile;
-	public Scripting scripting;
+	// public Scripting scripting;
 
 	public MaxwellConfig() { // argv is only null in tests
 		this.customProducerProperties = new Properties();
@@ -409,7 +409,7 @@ public class MaxwellConfig extends AbstractConfig {
 		this.bootstrapperType   = fetchOption("bootstrapper", options, properties, "async");
 		this.clientID           = fetchOption("client_id", options, properties, "maxwell");
 		this.replicaServerID    = fetchLongOption("replica_server_id", options, properties, 6379L);
-		this.javascriptFile         = fetchOption("javascript", options, properties, null);
+		// this.javascriptFile         = fetchOption("javascript", options, properties, null);
 
 		this.kafkaTopic         	= fetchOption("kafka_topic", options, properties, "maxwell");
 		this.deadLetterTopic        = fetchOption("dead_letter_topic", options, properties, null);
@@ -801,14 +801,14 @@ public class MaxwellConfig extends AbstractConfig {
 		if (this.bufferMemoryUsage > 1f)
 			usage("--buffer_memory_usage must be <= 1.0");
 
-		if ( this.javascriptFile != null ) {
-			try {
-				this.scripting = new Scripting(this.javascriptFile);
-			} catch ( Exception e ) {
-				LOGGER.error("Error setting up javascript: ", e);
-				System.exit(1);
-			}
-		}
+		// if ( this.javascriptFile != null ) {
+		// 	try {
+		// 		this.scripting = new Scripting(this.javascriptFile);
+		// 	} catch ( Exception e ) {
+		// 		LOGGER.error("Error setting up javascript: ", e);
+		// 		System.exit(1);
+		// 	}
+		// }
 	}
 
 	public Properties getKafkaProperties() {
