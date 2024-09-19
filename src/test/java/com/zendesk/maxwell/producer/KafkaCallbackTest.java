@@ -66,8 +66,8 @@ public class KafkaCallbackTest {
 		Exception error = new NotEnoughReplicasException("blah");
 		callback.onCompletion(new RecordMetadata(new TopicPartition("topic", 1), 1, 1, 1, new Long(1), 1, 1), error);
 		verify(context).terminate(error);
-		verifyZeroInteractions(producer);
-		verifyZeroInteractions(cc);
+		verifyNoInteractions(producer);
+		verifyNoInteractions(cc);
 	}
 
 	@Test
@@ -85,7 +85,7 @@ public class KafkaCallbackTest {
 		callback.onCompletion(recordMetadata, error);
 
 		// don't complete yet!
-		verifyZeroInteractions(cc);
+		verifyNoInteractions(cc);
 
 		ArgumentCaptor<KafkaCallback> cbCaptor = ArgumentCaptor.forClass(KafkaCallback.class);
 		verify(producer).enqueueFallbackRow(eq("dead_letters"), eq(id), cbCaptor.capture(), any(), eq(error));
@@ -111,7 +111,7 @@ public class KafkaCallbackTest {
 		callback.onCompletion(recordMetadata, error);
 
 		// don't complete yet!
-		verifyZeroInteractions(cc);
+		verifyNoInteractions(cc);
 
 		ArgumentCaptor<KafkaCallback> cbCaptor = ArgumentCaptor.forClass(KafkaCallback.class);
 		verify(producer).enqueueFallbackRow(eq("dead_letters"), eq(id), cbCaptor.capture(), any(), eq(error));
@@ -135,7 +135,7 @@ public class KafkaCallbackTest {
 		callback.onCompletion(recordMetadata, error);
 
 		verify(cc).markCompleted();
-		verifyZeroInteractions(producer);
+		verifyNoInteractions(producer);
 	}
 }
 
