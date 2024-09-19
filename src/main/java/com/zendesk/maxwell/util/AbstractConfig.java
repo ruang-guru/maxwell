@@ -139,8 +139,20 @@ public abstract class AbstractConfig {
 		config.user     = fetchOption(prefix + "user", options, properties, null);
 		config.port     = Integer.valueOf(fetchOption(prefix + "port", options, properties, "3306"));
 		config.sslMode  = this.getSslModeFromString(fetchOption(prefix + "ssl", options, properties, null));
-		config.setJDBCOptions(
-		    fetchOption(prefix + "jdbc_options", options, properties, null));
+
+		String jdbcOptions = fetchOption(prefix + "jdbc_options", options, properties, null);
+	
+		// NOTE: this to ensure java Date "0000-00-00" converted to NULL
+		if(jdbcOptions == null) {
+			jdbcOptions = "zeroDateTimeBehavior=convertToNull";
+		} else {
+			jdbcOptions += "&zeroDateTimeBehavior=convertToNull";
+		}
+
+		// System.out.println("jdbc_options: " + jdbcOptions);
+
+		config.setJDBCOptions(jdbcOptions);
+
 		return config;
 	}
 
