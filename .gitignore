@@ -1,3 +1,8 @@
+.envrc
+.factorypath
+.sdkmanrc
+changes
+dist
 data/*.yaml
 config/*.yml
 /target
