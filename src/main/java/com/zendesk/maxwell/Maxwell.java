@@ -1,6 +1,6 @@
 package com.zendesk.maxwell;
 
-import com.djdch.log4j.StaticShutdownCallbackRegistry;
+// import com.djdch.log4j.StaticShutdownCallbackRegistry;
 import com.zendesk.maxwell.bootstrap.BootstrapController;
 import com.zendesk.maxwell.producer.AbstractProducer;
 import com.zendesk.maxwell.recovery.Recovery;
@@ -237,7 +237,7 @@ public class Maxwell implements Runnable {
 				@Override
 				public void run() {
 					maxwell.terminate();
-					StaticShutdownCallbackRegistry.invoke();
+					// StaticShutdownCallbackRegistry.invoke();
 				}
 			});
 
