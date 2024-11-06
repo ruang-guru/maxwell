@@ -142,6 +142,7 @@ public class MaxwellConfig extends AbstractConfig {
 	public String redisStreamJsonKey;
 	public String redisType;
 	public String javascriptFile;
+	public String pubsubEndpoint;
 	// public Scripting scripting;
 
 	public MaxwellConfig() { // argv is only null in tests
@@ -261,6 +262,7 @@ public class MaxwellConfig extends AbstractConfig {
 
 
 		parser.section( "pubsub" );
+		parser.accepts( "pubsub_endpoint", "optionally set pubsub endpoint" ).withRequiredArg();
 		parser.accepts( "pubsub_project_id", "provide a google cloud platform project id associated with the pubsub topic" ).withRequiredArg();
 		parser.accepts( "pubsub_topic", "optionally provide a pubsub topic to push to. default: maxwell" ).withRequiredArg();
 		parser.accepts( "ddl_pubsub_topic", "optionally provide an alternate pubsub topic to push DDL records to. default: pubsub_topic" ).withRequiredArg();
@@ -423,6 +425,7 @@ public class MaxwellConfig extends AbstractConfig {
 
 		this.pubsubProjectId					= fetchOption("pubsub_project_id", options, properties, null);
 		this.pubsubTopic						= fetchOption("pubsub_topic", options, properties, "maxwell");
+		this.pubsubEndpoint						= fetchOption("pubsub_endpoint", options, properties, null);
 		this.ddlPubsubTopic						= fetchOption("ddl_pubsub_topic", options, properties, this.pubsubTopic);
 		this.pubsubRequestBytesThreshold		= fetchLongOption("pubsub_request_bytes_threshold", options, properties, 1L);
 		this.pubsubMessageCountBatchSize		= fetchLongOption("pubsub_message_count_batch_size", options, properties, 1L);
