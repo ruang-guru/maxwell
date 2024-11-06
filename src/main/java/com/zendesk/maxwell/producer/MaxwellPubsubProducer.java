@@ -12,6 +12,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import com.google.api.gax.rpc.TransportChannelProvider;
+import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.zendesk.maxwell.MaxwellContext;
 import com.zendesk.maxwell.monitoring.Metrics;
 import com.zendesk.maxwell.replication.Position;
@@ -92,12 +94,12 @@ public class MaxwellPubsubProducer extends AbstractProducer {
   private final ArrayBlockingQueue<RowMap> queue;
   private final MaxwellPubsubProducerWorker worker;
 
-  public MaxwellPubsubProducer(MaxwellContext context, String pubsubProjectId,
+  public MaxwellPubsubProducer(MaxwellContext context, String pubsubProjectId, String pubsubEndpoint,
                                String pubsubTopic, String ddlPubsubTopic)
                                throws IOException {
     super(context);
     this.queue = new ArrayBlockingQueue<>(100);
-    this.worker = new MaxwellPubsubProducerWorker(context, pubsubProjectId,
+    this.worker = new MaxwellPubsubProducerWorker(context, pubsubProjectId, pubsubEndpoint,
                                                   pubsubTopic, ddlPubsubTopic,
                                                   this.queue);
 
@@ -122,6 +124,7 @@ class MaxwellPubsubProducerWorker
   static final Logger LOGGER = LoggerFactory.getLogger(MaxwellPubsubProducerWorker.class);
 
   private final String projectId;
+  private final String endpoint;
   private Publisher pubsub;
   private final ProjectTopicName topic;
   private final ProjectTopicName ddlTopic;
@@ -131,7 +134,7 @@ class MaxwellPubsubProducerWorker
   private StoppableTaskState taskState;
 
   public MaxwellPubsubProducerWorker(MaxwellContext context,
-                                     String pubsubProjectId, String pubsubTopic,
+                                     String pubsubProjectId, String pubsubEndpoint, String pubsubTopic,
                                      String ddlPubsubTopic,
                                      ArrayBlockingQueue<RowMap> queue)
                                      throws IOException {
@@ -158,8 +161,21 @@ class MaxwellPubsubProducerWorker
             .build();
         
     this.projectId = pubsubProjectId;
+    this.endpoint = pubsubEndpoint;
     this.topic = ProjectTopicName.of(pubsubProjectId, pubsubTopic);
-    this.pubsub = Publisher.newBuilder(this.topic).setBatchingSettings(batchingSettings).setRetrySettings(retrySettings).build();
+
+    Publisher.Builder builder = Publisher.newBuilder(this.topic).setBatchingSettings(batchingSettings).setRetrySettings(retrySettings);
+
+    if (endpoint != null && !endpoint.isEmpty()) {
+      TransportChannelProvider channelProvider =
+        InstantiatingGrpcChannelProvider.newBuilder()
+          .setEndpoint(endpoint)
+          .build();
+      
+      builder.setChannelProvider(channelProvider);
+  }
+
+  this.pubsub = builder.build();
 
     if ( context.getConfig().outputConfig.outputDDL == true &&
          ddlPubsubTopic != pubsubTopic ) {

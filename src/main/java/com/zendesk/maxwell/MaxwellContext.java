@@ -333,7 +333,7 @@ public class MaxwellContext {
 				this.producer = new MaxwellSQSProducer(this, this.config.sqsQueueUri);
 				break;
 			case "pubsub":
-				this.producer = new MaxwellPubsubProducer(this, this.config.pubsubProjectId, this.config.pubsubTopic, this.config.ddlPubsubTopic);
+				this.producer = new MaxwellPubsubProducer(this, this.config.pubsubProjectId, this.config.pubsubEndpoint, this.config.pubsubTopic, this.config.ddlPubsubTopic);
 				break;
 			case "profiler":
 				this.producer = new ProfilerProducer(this);
