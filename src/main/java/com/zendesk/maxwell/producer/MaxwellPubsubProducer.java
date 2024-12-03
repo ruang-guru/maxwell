@@ -164,18 +164,24 @@ class MaxwellPubsubProducerWorker
     this.endpoint = pubsubEndpoint;
     this.topic = ProjectTopicName.of(pubsubProjectId, pubsubTopic);
 
-    Publisher.Builder builder = Publisher.newBuilder(this.topic).setBatchingSettings(batchingSettings).setRetrySettings(retrySettings);
+    Publisher.Builder builder = Publisher.newBuilder(this.topic)
+        .setBatchingSettings(batchingSettings)
+        .setRetrySettings(retrySettings);
+
+    if (context.getConfig().pubsubEnableCompression) {
+        builder.setEnableCompression(true)
+               .setCompressionBytesThreshold(context.getConfig().pubsubCompressionBytesThreshold);
+    }
 
     if (endpoint != null && !endpoint.isEmpty()) {
-      TransportChannelProvider channelProvider =
-        InstantiatingGrpcChannelProvider.newBuilder()
-          .setEndpoint(endpoint)
-          .build();
-      
-      builder.setChannelProvider(channelProvider);
-  }
+        TransportChannelProvider channelProvider =
+            InstantiatingGrpcChannelProvider.newBuilder()
+                .setEndpoint(endpoint)
+                .build();
+        builder.setChannelProvider(channelProvider);
+    }
 
-  this.pubsub = builder.build();
+    this.pubsub = builder.build();
 
     if ( context.getConfig().outputConfig.outputDDL == true &&
          ddlPubsubTopic != pubsubTopic ) {

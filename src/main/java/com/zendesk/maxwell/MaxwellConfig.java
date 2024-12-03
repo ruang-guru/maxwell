@@ -145,6 +145,9 @@ public class MaxwellConfig extends AbstractConfig {
 	public String pubsubEndpoint;
 	// public Scripting scripting;
 
+	public boolean pubsubEnableCompression;
+	public Long pubsubCompressionBytesThreshold;
+
 	public MaxwellConfig() { // argv is only null in tests
 		this.customProducerProperties = new Properties();
 		this.kafkaProperties = new Properties();
@@ -276,6 +279,8 @@ public class MaxwellConfig extends AbstractConfig {
 		parser.accepts( "pubsub_rpc_timeout_multiplier", "optionally controls the change in RPC timeout. default: 1.0" ).withRequiredArg();
 		parser.accepts( "pubsub_max_rpc_timeout", "optionally puts a limit on the value in seconds of the RPC timeout. default: 600 seconds" ).withRequiredArg();
 		parser.accepts( "pubsub_total_timeout", "optionally puts a limit on the value in seconds of the retry delay, so that the RetryDelayMultiplier can't increase the retry delay higher than this amount. default: 600 seconds" ).withRequiredArg();
+		parser.accepts("pubsub_enable_compression", "enable message compression. default: false").withRequiredArg();
+		parser.accepts("pubsub_compression_bytes_threshold", "compress messages larger than this size in bytes. default: 240").withRequiredArg();
 
 		parser.section( "output" );
 
@@ -437,6 +442,8 @@ public class MaxwellConfig extends AbstractConfig {
 		this.pubsubRpcTimeoutMultiplier 		= Double.parseDouble(fetchOption("pubsub_rpc_timeout_multiplier", options, properties, "1.0"));
 		this.pubsubMaxRpcTimeout 		 		= Duration.ofSeconds(fetchLongOption("pubsub_max_rpc_timeout", options, properties, 600L));
 		this.pubsubTotalTimeout 		 		= Duration.ofSeconds(fetchLongOption("pubsub_total_timeout", options, properties, 600L));
+		this.pubsubEnableCompression 			= fetchBooleanOption("pubsub_enable_compression", options, properties, false);
+		this.pubsubCompressionBytesThreshold = fetchLongOption("pubsub_compression_bytes_threshold", options, properties, 240L);
 
 		this.rabbitmqHost           		= fetchOption("rabbitmq_host", options, properties, "localhost");
 		this.rabbitmqPort 			= Integer.parseInt(fetchOption("rabbitmq_port", options, properties, "5672"));
@@ -595,7 +602,6 @@ public class MaxwellConfig extends AbstractConfig {
 		if (outputConfig.encryptionEnabled()) {
 			outputConfig.secretKey = fetchOption("secret_key", options, properties, null);
 		}
-
 	}
 
 	private Properties parseFile(String filename, Boolean abortOnMissing) {
