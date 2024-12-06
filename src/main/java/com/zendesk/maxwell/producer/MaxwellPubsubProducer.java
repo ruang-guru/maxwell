@@ -62,8 +62,8 @@ class PubsubCallback implements ApiFutureCallback<String> {
     this.succeededMessageCount.inc();
     this.succeededMessageMeter.mark();
 
-    LOGGER.info("Successfully published message with ID: {} @ position: {}", messageId, this.position);
     if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Successfully published message with ID: {} @ position: {}", messageId, this.position);
         LOGGER.debug("Message content: {}", this.json);
     }
 
@@ -169,13 +169,13 @@ class MaxwellPubsubProducerWorker
         .setRetrySettings(retrySettings);
 
     if (context.getConfig().pubsubEnableCompression) {
-        LOGGER.info("Enabling compression with threshold of {} bytes", context.getConfig().pubsubCompressionBytesThreshold);
+        LOGGER.debug("Enabling compression with threshold of {} bytes", context.getConfig().pubsubCompressionBytesThreshold);
         builder.setEnableCompression(true)
                .setCompressionBytesThreshold(context.getConfig().pubsubCompressionBytesThreshold);
     }
 
     if (endpoint != null && !endpoint.isEmpty()) {
-        LOGGER.info("Using custom endpoint: {}", endpoint);
+        LOGGER.debug("Using custom endpoint: {}", endpoint);
         TransportChannelProvider channelProvider =
             InstantiatingGrpcChannelProvider.newBuilder()
                 .setEndpoint(endpoint)
@@ -183,16 +183,16 @@ class MaxwellPubsubProducerWorker
         builder.setChannelProvider(channelProvider);
     }
 
-    LOGGER.info("Initializing Pub/Sub publisher for topic: {}", this.topic.getTopic());
+    LOGGER.debug("Initializing Pub/Sub publisher for topic: {}", this.topic.getTopic());
     this.pubsub = builder.build();
-    LOGGER.info("Pub/Sub publisher initialized successfully");
+    LOGGER.debug("Pub/Sub publisher initialized successfully");
 
     if ( context.getConfig().outputConfig.outputDDL == true &&
          ddlPubsubTopic != pubsubTopic ) {
       this.ddlTopic = ProjectTopicName.of(pubsubProjectId, ddlPubsubTopic);
       this.ddlPubsub = Publisher.newBuilder(this.ddlTopic).build();
-      LOGGER.info("Initializing DDL Pub/Sub publisher for topic: {}", this.ddlTopic.getTopic());
-      LOGGER.info("DDL Pub/Sub publisher initialized successfully");
+      LOGGER.debug("Initializing DDL Pub/Sub publisher for topic: {}", this.ddlTopic.getTopic());
+      LOGGER.debug("DDL Pub/Sub publisher initialized successfully");
     } else {
       this.ddlTopic = this.topic;
       this.ddlPubsub = this.pubsub;
@@ -237,15 +237,15 @@ class MaxwellPubsubProducerWorker
 
     try {
         if (r instanceof DDLMap) {
-            LOGGER.info("Publishing DDL message to topic: {}", ddlTopic.getTopic());
+            LOGGER.debug("Publishing DDL message to topic: {}", ddlTopic.getTopic());
             ApiFuture<String> apiFuture = ddlPubsub.publish(pubsubMessage);
-            LOGGER.info("DDL message publish initiated with message size: {} bytes", data.size());
+            LOGGER.debug("DDL message publish initiated with message size: {} bytes", data.size());
             PubsubCallback callback = new PubsubCallback(cc, r.getNextPosition(), message,
                     this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
 
             ApiFutures.addCallback(apiFuture, callback, MoreExecutors.directExecutor());
         } else {
-            LOGGER.info("Publishing message to topic: {} with size: {} bytes", 
+            LOGGER.debug("Publishing message to topic: {} with size: {} bytes", 
                        topic.getTopic(), data.size());
             ApiFuture<String> apiFuture = pubsub.publish(pubsubMessage);
             PubsubCallback callback = new PubsubCallback(cc, r.getNextPosition(), message,
