@@ -62,10 +62,9 @@ class PubsubCallback implements ApiFutureCallback<String> {
     this.succeededMessageCount.inc();
     this.succeededMessageMeter.mark();
 
-    if ( LOGGER.isDebugEnabled() ) {
-      LOGGER.debug("->  " + this.json);
-      LOGGER.debug("    " + this.position);
-      LOGGER.debug("");
+    if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Successfully published message with ID: {} @ position: {}", messageId, this.position);
+        LOGGER.debug("Message content: {}", this.json);
     }
 
     cc.markCompleted();
@@ -76,12 +75,13 @@ class PubsubCallback implements ApiFutureCallback<String> {
     this.failedMessageCount.inc();
     this.failedMessageMeter.mark();
 
-    LOGGER.error(t.getClass().getSimpleName() + " @ " + position);
-    LOGGER.error(t.getLocalizedMessage());
+    LOGGER.error("Failed to publish message @ position: {}. Error: {}", position, t.getMessage());
+    LOGGER.error("Failed message content: {}", this.json);
+    LOGGER.error("Detailed error: ", t);
 
-    if ( !this.context.getConfig().ignoreProducerError ) {
-      this.context.terminate(new RuntimeException(t));
-      return;
+    if (!this.context.getConfig().ignoreProducerError) {
+        this.context.terminate(new RuntimeException(t));
+        return;
     }
 
     cc.markCompleted();
@@ -164,23 +164,35 @@ class MaxwellPubsubProducerWorker
     this.endpoint = pubsubEndpoint;
     this.topic = ProjectTopicName.of(pubsubProjectId, pubsubTopic);
 
-    Publisher.Builder builder = Publisher.newBuilder(this.topic).setBatchingSettings(batchingSettings).setRetrySettings(retrySettings);
+    Publisher.Builder builder = Publisher.newBuilder(this.topic)
+        .setBatchingSettings(batchingSettings)
+        .setRetrySettings(retrySettings);
+
+    if (context.getConfig().pubsubEnableCompression) {
+        LOGGER.debug("Enabling compression with threshold of {} bytes", context.getConfig().pubsubCompressionBytesThreshold);
+        builder.setEnableCompression(true)
+               .setCompressionBytesThreshold(context.getConfig().pubsubCompressionBytesThreshold);
+    }
 
     if (endpoint != null && !endpoint.isEmpty()) {
-      TransportChannelProvider channelProvider =
-        InstantiatingGrpcChannelProvider.newBuilder()
-          .setEndpoint(endpoint)
-          .build();
-      
-      builder.setChannelProvider(channelProvider);
-  }
+        LOGGER.debug("Using custom endpoint: {}", endpoint);
+        TransportChannelProvider channelProvider =
+            InstantiatingGrpcChannelProvider.newBuilder()
+                .setEndpoint(endpoint)
+                .build();
+        builder.setChannelProvider(channelProvider);
+    }
 
-  this.pubsub = builder.build();
+    LOGGER.debug("Initializing Pub/Sub publisher for topic: {}", this.topic.getTopic());
+    this.pubsub = builder.build();
+    LOGGER.debug("Pub/Sub publisher initialized successfully");
 
     if ( context.getConfig().outputConfig.outputDDL == true &&
          ddlPubsubTopic != pubsubTopic ) {
       this.ddlTopic = ProjectTopicName.of(pubsubProjectId, ddlPubsubTopic);
       this.ddlPubsub = Publisher.newBuilder(this.ddlTopic).build();
+      LOGGER.debug("Initializing DDL Pub/Sub publisher for topic: {}", this.ddlTopic.getTopic());
+      LOGGER.debug("DDL Pub/Sub publisher initialized successfully");
     } else {
       this.ddlTopic = this.topic;
       this.ddlPubsub = this.pubsub;
@@ -215,21 +227,35 @@ class MaxwellPubsubProducerWorker
   public void sendAsync(RowMap r, AbstractAsyncProducer.CallbackCompleter cc)
       throws Exception {
     String message = r.toJSON(outputConfig);
+    
+    if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Attempting to publish message: {}", message);
+    }
+    
     ByteString data = ByteString.copyFromUtf8(message);
     PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
 
-    if ( r instanceof DDLMap ) {
-	  ApiFuture<String> apiFuture = ddlPubsub.publish(pubsubMessage);
-	  PubsubCallback callback = new PubsubCallback(cc, r.getNextPosition(), message,
-			  this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
+    try {
+        if (r instanceof DDLMap) {
+            LOGGER.debug("Publishing DDL message to topic: {}", ddlTopic.getTopic());
+            ApiFuture<String> apiFuture = ddlPubsub.publish(pubsubMessage);
+            LOGGER.debug("DDL message publish initiated with message size: {} bytes", data.size());
+            PubsubCallback callback = new PubsubCallback(cc, r.getNextPosition(), message,
+                    this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
 
-	  ApiFutures.addCallback(apiFuture, callback, MoreExecutors.directExecutor());
-    } else {
-	  ApiFuture<String> apiFuture = pubsub.publish(pubsubMessage);
-	  PubsubCallback callback = new PubsubCallback(cc, r.getNextPosition(), message,
-			  this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
+            ApiFutures.addCallback(apiFuture, callback, MoreExecutors.directExecutor());
+        } else {
+            LOGGER.debug("Publishing message to topic: {} with size: {} bytes", 
+                       topic.getTopic(), data.size());
+            ApiFuture<String> apiFuture = pubsub.publish(pubsubMessage);
+            PubsubCallback callback = new PubsubCallback(cc, r.getNextPosition(), message,
+                    this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
 
-	  ApiFutures.addCallback(apiFuture, callback, MoreExecutors.directExecutor());
+            ApiFutures.addCallback(apiFuture, callback, MoreExecutors.directExecutor());
+        }
+    } catch (Exception e) {
+        LOGGER.error("Error publishing message: {}", e.getMessage(), e);
+        throw e;
     }
   }
 
