@@ -169,13 +169,13 @@ class MaxwellPubsubProducerWorker
         .setRetrySettings(retrySettings);
 
     if (context.getConfig().pubsubEnableCompression) {
-        LOGGER.debug("Enabling compression with threshold of {} bytes", context.getConfig().pubsubCompressionBytesThreshold);
+        LOGGER.info("Enabling compression with threshold of {} bytes", context.getConfig().pubsubCompressionBytesThreshold);
         builder.setEnableCompression(true)
                .setCompressionBytesThreshold(context.getConfig().pubsubCompressionBytesThreshold);
     }
 
     if (endpoint != null && !endpoint.isEmpty()) {
-        LOGGER.debug("Using custom endpoint: {}", endpoint);
+        LOGGER.info("Using custom endpoint: {}", endpoint);
         TransportChannelProvider channelProvider =
             InstantiatingGrpcChannelProvider.newBuilder()
                 .setEndpoint(endpoint)
